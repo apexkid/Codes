@@ -1,0 +1,219 @@
+/*
+ * STRONGLY CONNECTED COMPONENTS
+TEST CASE 
+8
+
+0 1
+1 4
+1 5
+1 2
+2 6
+2 3
+3 2
+3 7
+4 5
+4 0
+5 6
+6 7
+6 5
+7 7
+-1 -1
+*/
+
+#include <iostream>
+#include <cstring>
+#include <vector>
+#include <list>
+#include <map>
+
+#define INF -1
+
+using namespace std;
+
+class Graph
+{
+	int N;
+	vector<vector<int> > G;
+	vector<int> dt;		//discovery time
+	vector<int> ft;		//finish time
+	int time;
+	vector<list<int> > CG;	//Component Graph
+	int t;
+	public:
+	Graph(int n)
+	{
+	t = 0;
+		this -> time = 0;
+		this -> N = n;
+		for(int i = 0; i < N; i++)
+		{
+			dt.push_back(INF);
+			ft.push_back(INF);
+			vector<int> temp;
+			for(int j = 0; j < N; j++)
+				temp.push_back(0);
+				
+			G.push_back(temp);
+		}
+	}
+	
+	void addEdge(int i, int j);
+	void DFS();
+	void DFS_visit(int node, bool visited[]);
+	void printResult(void);
+	void SCC(void);
+	Graph getTranspose(void);
+	void DFS_scc(Graph);
+	void DFS_scc_visit(int node, bool visited[], list<int> &l);
+};
+
+void Graph::addEdge(int i, int j)
+{
+	G[i][j] = 1;
+	return;
+}
+
+void Graph::DFS()
+{
+	bool *visited = new bool[N];
+	for(int i = 0; i < N; i++)
+		visited[i] = false;
+	
+	for(int s = 0; s < N; s++)
+	{
+		if(visited[s] == false)
+			DFS_visit(s, visited);
+	}
+	
+	return;
+}
+
+void Graph::DFS_visit(int s, bool visited[])
+{
+	time++;
+	dt[s] = time;
+	visited[s] = true;
+	
+	for(int i = 0; i < N; i++)
+	{
+		if(G[s][i] && !visited[i])
+		{
+			DFS_visit(i, visited);
+		}
+	}
+	time++;
+	ft[s] = time;
+	return;
+}
+
+void Graph::SCC()
+{
+	Graph gT(N);	//Transpose graph object
+	
+	gT = getTranspose();
+	DFS();
+	
+	DFS_scc(gT);
+}
+
+void Graph::DFS_scc(Graph gt)
+{
+        bool *visited = new bool[gt.N];
+        for(int i = 0; i < gt.N; i++)
+                visited[i] = false;
+	
+	//Inserting finish time to get it into sorted order
+	map<int, int> mp;
+	map<int, int>::reverse_iterator mit;
+	for(int i = 0; i < N; i++)
+	{
+		mp[ft[i]] = i;
+	}
+	
+	for(mit = mp.rbegin(); mit != mp.rend(); ++mit);
+        {
+		list<int> l;
+		int s = (*mit).second;
+		cout << " s = " << s << " Size of map= " << mp.size() << endl;
+                if(visited[s] == false)
+		{
+		        gt.DFS_scc_visit(s, visited, l);
+			CG.push_back(l);
+		}
+        }
+}
+
+void Graph::DFS_scc_visit(int s, bool visited[], list<int> &l)
+{
+        time++;
+        dt[s] = time;
+        visited[s] = true;
+
+        for(int i = 0; i < N; i++)
+        {
+                if(G[s][i] && !visited[i])
+                {
+                        DFS_scc_visit(i, visited, l);
+                }
+        }
+        time++;
+        ft[s] = time;
+	l.push_back(s);
+}
+
+void Graph::printResult()
+{
+	cout << "vertex" << "  discovery time" << "  finish time" << endl;
+	for(int i = 0; i < N; i++)
+		cout << i << "               " << dt[i] << "          " << ft[i] << endl;
+
+	cout << endl << "Strongly connected components" << endl;
+	for(int i = 0; i < CG.size(); i++)
+	{
+		list<int> temp;
+		temp = CG[i];
+		while(!temp.empty())
+		{
+			cout << temp.front() << "  ";	temp.pop_front();
+		}
+		cout << endl;
+	}
+
+//	cout <<" t = " << t;
+}
+
+Graph Graph::getTranspose()
+{
+	Graph gT(N);
+	for(int i = 0; i < N; i++)
+        {
+                for(int j = 0; j < N; j++)
+                {
+                        if(G[i][j])
+                                gT.addEdge(j, i);
+                }
+        }
+	return gT;
+}
+
+int main()
+{
+	int n;
+	cout << "Enter num of vertex" << endl;
+	cin >> n;
+
+	Graph g(n);
+	
+	cout << "Enter the edges.. write -1 -1 to quit" << endl;
+	int x , y;
+	cin >> x >> y;
+	while(x != -1)
+	{
+		g.addEdge(x, y);
+		cin >> x >> y;
+	}
+
+	g.SCC();
+	g.printResult();
+	return 0;
+}
