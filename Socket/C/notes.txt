@@ -1,0 +1,56 @@
+Configure Socket
+
+Things that need to be initialized are listed as follows:
+
+    Using TCP or UDP
+    Additional protocol
+    Permit the incoming IP address
+    Assign the port used
+
+At the beginning, a socket function needs to be declared to get the socket descriptor.
+Collapse | Copy Code
+
+int socket(int domain, int type, int protocol)
+
+Domain 	AF_UNIX - connect inside same machine AF_INET – connect with different machine
+Type 	SOCK_STREAM – TCP connection SOCK_DGRAM – UDP connection 
+Protocol 	Define here when there is any additional protocol. Otherwise, define it as 0
+
+Next, decide which struct needs to be used based on what domain is used above.
+AF_UNIX 	AF_INET
+Collapse | Copy Code
+
+struct sockaddr_un
+  {
+    sa_family_t sun_family ;
+    char sun_path[];
+  };
+
+	
+Collapse | Copy Code
+
+struct sockaddr_in
+  {
+    short int  sin_family ;
+    int        sin_port;
+    struct in_addr sin_addr;
+  };
+
+Use struct sockaddr_un if you are using AF_UNIX on your domain. It is required to include <sys/un.h> 	Use struct sockaddr_in if you are using AF_INT on your domain.
+
+On this article, I will explain sockadd_in that showed on the code above.
+Collapse | Copy Code
+
+serv_addr.sin_family = AF_INET;
+
+	Define the domain used
+Collapse | Copy Code
+
+serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+
+	Permit any incoming IP address by declare INADDR_ANY
+Collapse | Copy Code
+
+serv_addr.sin_port = htons(5000);
+
+	Declare port 5000 to be used.
